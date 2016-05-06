@@ -1,4 +1,4 @@
-# **Welcome to the Barectf**
+# **Barectf Implementation on Linux File system and TI TM4C Microcontroller**
 
 Notes: 
 

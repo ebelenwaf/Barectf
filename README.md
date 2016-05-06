@@ -1,7 +1,5 @@
 ## **Barectf Implementation on Linux File System and TI-TM4C Microcontroller**
 
-Notes: 
-
 This repo contains files for a basic implementation of barectf for Linux File system and will also contain the barectf implementation for the TI TM4C Micro-controller. 
 
 Install barectf using the instructions on https://github.com/efficios/barectf.

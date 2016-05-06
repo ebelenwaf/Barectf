@@ -1,4 +1,4 @@
-# **Barectf Implementation on Linux File system and TI TM4C Microcontroller**
+## **Barectf Implementation on Linux File System and TI-TM4C Microcontroller**
 
 Notes: 
 

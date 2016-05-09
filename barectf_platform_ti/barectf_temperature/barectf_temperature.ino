@@ -1,3 +1,11 @@
+
+
+
+
+
+
+
+
 /*
   Example 09: Temperature (Thermistor and Temp Sensor)
   Sidekick Basic Kit for TI LaunchPad
@@ -49,17 +57,21 @@
 #include <barectf.h>
 #include <sys/time.h>
 #include <time.h>
-
-
-
+#include <barectf.h>
 #include "barectf-platform-linux-fs.h"
+
+
+
+//#include "barectf-platform-linux-fs.h"
+
+struct barectf_platform_linux_fs_ctx *ctx_return;
 
 void setup()
 {
   // initialize serial communication over UART at 9600 baud
   Serial.begin(9600); 
   
-  barectf_platform_linux_fs_init(10, "/Users/ebelechukwu/Documents/test", 0, 0, 0);
+   ctx_return = barectf_platform_linux_fs_init(10, "/Users/ebelechukwu/Documents/test", 0, 0, 0);
 }
 
 /* In the loop section we will take measurements from our two sensors
@@ -108,6 +120,9 @@ void loop()
  barectf_default_trace_my_event("TempF=");
     
  barectf_default_trace_my_event(ThermistorTempF);
+ 
+ 
+ 
      
      
   
@@ -169,117 +184,11 @@ void loop()
   */
   
   // >>> End of LM19 Section <<<
+  
+  
+  
+  barectf_platform_linux_fs_fini(ctx_return);
 }
 
 
-static void write_packet(struct barectf_platform_linux_fs_ctx *ctx)
-{
-	size_t nmemb = fwrite(barectf_packet_buf(&ctx->ctx),
-		barectf_packet_buf_size(&ctx->ctx), 1, ctx->fh);
-	assert(nmemb == 1);
-}
-
-
-
-static void open_packet(void *data)
-{
-	struct barectf_platform_linux_fs_ctx *ctx = data;
-
-	barectf_default_open_packet(&ctx->ctx);
-}
-
-
-
-static void close_packet(void *data)
-{
-	struct barectf_platform_linux_fs_ctx *ctx = data;
-
-	/* close packet now */
-	barectf_default_close_packet(&ctx->ctx);
-
-	/* write packet to file */
-	write_packet(ctx);
-}
-
-
-
-
-static int is_backend_full(void *data)
-{
-	struct barectf_platform_linux_fs_ctx *ctx = data;
-
-	if (ctx->simulate_full_backend) {
-		if (rand() % ctx->full_backend_rand_max <
-				ctx->full_backend_rand_lt) {
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
-
-
-
-struct barectf_platform_linux_fs_ctx *barectf_platform_linux_fs_init(
-	unsigned int buf_size, const char *trace_dir, int simulate_full_backend,
-	unsigned int full_backend_rand_lt, unsigned int full_backend_rand_max)
-{
-	char stream_path[256];
-	uint8_t *buf;
-	struct barectf_platform_linux_fs_ctx *ctx;
-	struct barectf_platform_callbacks cbs = {
-		//.default_clock_get_value = get_clock,
-		.is_backend_full = is_backend_full,
-		.open_packet = open_packet,
-		.close_packet = close_packet,
-	};
-
-	ctx = malloc(sizeof(*ctx));
-
-	if (!ctx) {
-		return NULL;
-	}
-
-	buf = malloc(buf_size);
-
-	if (!buf) {
-		free(ctx);
-		return NULL;
-	}
-
-	memset(buf, 0, buf_size);
-
-	sprintf(stream_path, "%s/stream", trace_dir);
-	ctx->fh = fopen(stream_path, "wb");
-
-	if (!ctx->fh) {
-		free(ctx);
-		free(buf);
-		return NULL;
-	}
-
-	ctx->simulate_full_backend = simulate_full_backend;
-	ctx->full_backend_rand_lt = full_backend_rand_lt;
-	ctx->full_backend_rand_max = full_backend_rand_max;
-
-	barectf_init(&ctx->ctx, buf, buf_size, cbs, ctx);
-	open_packet(ctx);
-
-	return ctx;
-}
-
-
-
-void barectf_platform_linux_fs_fini(struct barectf_platform_linux_fs_ctx *ctx)
-{
-	if (barectf_packet_is_open(&ctx->ctx) &&
-			!barectf_packet_is_empty(&ctx->ctx)) {
-		close_packet(ctx);
-	}
-
-	fclose(ctx->fh);
-	free(barectf_packet_buf(&ctx->ctx));
-	free(ctx);
-}
 
